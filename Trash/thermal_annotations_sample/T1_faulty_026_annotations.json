@@ -1,0 +1,71 @@
+{
+  "image_path": "Dataset/T1/faulty/T1_faulty_026.jpg",
+  "num_hot_regions": 8,
+  "bounding_boxes": [
+    {
+      "x": 517,
+      "y": 29,
+      "width": 102,
+      "height": 53,
+      "confidence": 1.0
+    },
+    {
+      "x": 67,
+      "y": 40,
+      "width": 75,
+      "height": 38,
+      "confidence": 0.7368421052631577
+    },
+    {
+      "x": 33,
+      "y": 42,
+      "width": 21,
+      "height": 31,
+      "confidence": 1.0
+    },
+    {
+      "x": 13,
+      "y": 155,
+      "width": 26,
+      "height": 211,
+      "confidence": 1.0
+    },
+    {
+      "x": 284,
+      "y": 264,
+      "width": 69,
+      "height": 65,
+      "confidence": 1.0
+    },
+    {
+      "x": 374,
+      "y": 281,
+      "width": 155,
+      "height": 66,
+      "confidence": 1.0
+    },
+    {
+      "x": 197,
+      "y": 318,
+      "width": 76,
+      "height": 51,
+      "confidence": 1.0
+    },
+    {
+      "x": 210,
+      "y": 498,
+      "width": 24,
+      "height": 24,
+      "confidence": 1.0
+    }
+  ],
+  "statistics": {
+    "total_hot_pixels": 8863,
+    "image_dimensions": [
+      640,
+      640
+    ],
+    "temperature_threshold": 200,
+    "analysis_channel": "red"
+  }
+}
