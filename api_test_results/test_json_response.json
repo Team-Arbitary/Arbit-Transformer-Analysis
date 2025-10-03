@@ -1,0 +1,16 @@
+{
+    "status": "success",
+    "transformer_id": "Test_JSON",
+    "timestamp": "2025-10-03T15:35:01.438133",
+    "summary": {
+        "total_anomalies": 0,
+        "severity_distribution": {
+            "HIGH": 0,
+            "MEDIUM": 0,
+            "LOW": 0
+        },
+        "detection_quality": "NO_ANOMALIES",
+        "critical_anomalies": 0
+    },
+    "anomalies": []
+}
