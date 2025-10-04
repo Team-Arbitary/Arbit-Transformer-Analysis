@@ -678,10 +678,13 @@ async def detect_anomalies(
 if __name__ == "__main__":
     import uvicorn
     
-    logger.info("Starting Thermal Anomaly Detection API server...")
+    # Get port from environment variable (Render sets this) or default to 8000
+    port = int(os.environ.get("PORT", 8000))
+    
+    logger.info(f"Starting Thermal Anomaly Detection API server on port {port}...")
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=port,
         log_level="info"
     )

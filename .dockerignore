@@ -1,0 +1,58 @@
+# Docker ignore file to reduce image size
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Virtual environment
+thermal_env/
+venv/
+env/
+ENV/
+
+# Dataset (too large for Docker image)
+Dataset/
+
+# Test results and outputs
+test_results/
+unified_results/
+annotated_results/
+api_test_results/
+results/
+
+# Documentation
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# macOS
+.DS_Store
+
+# Test files
+test_*.py
+test_*.sh
+*_test.py
+
+# Jupyter
+*.ipynb
+.ipynb_checkpoints/
+
+# Other analysis scripts (not needed for API)
+unified_thermal_analysis.py
+transform_and_align_images.py
