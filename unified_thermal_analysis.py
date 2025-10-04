@@ -53,7 +53,7 @@ class UnifiedThermalAnalyzer:
     
     def __init__(
         self,
-        ml_model_path='ML_analysis/models/best_model.pth',
+        ml_model_path='ML_analysis/models/final_model.pth',
         ml_threshold=0.5,
         ml_min_area=200,
         ml_max_area=5000,
