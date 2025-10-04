@@ -6,8 +6,6 @@ This script analyzes thermal images to detect hot regions and cluster them into
 rectangular annotations. It processes faulty images from the dataset and 
 identifies areas with elevated temperatures.
 
-Author: GitHub Copilot
-Date: October 2, 2025
 """
 
 import cv2
@@ -24,7 +22,7 @@ import json
 BoundingBox = namedtuple('BoundingBox', ['x', 'y', 'width', 'height', 'confidence'])
 
 class ThermalHotpointDetector:
-    def __init__(self, temperature_threshold=200, min_cluster_size=10, cluster_epsilon=15):
+    def __init__(self, temperature_threshold=100, min_cluster_size=10, cluster_epsilon=15):
         """
         Initialize the thermal hotpoint detector.
         
