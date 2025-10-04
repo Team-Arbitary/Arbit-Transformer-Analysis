@@ -22,7 +22,7 @@ import json
 BoundingBox = namedtuple('BoundingBox', ['x', 'y', 'width', 'height', 'confidence'])
 
 class ThermalHotpointDetector:
-    def __init__(self, temperature_threshold=100, min_cluster_size=10, cluster_epsilon=15):
+    def __init__(self, temperature_threshold=200, min_cluster_size=10, cluster_epsilon=15):
         """
         Initialize the thermal hotpoint detector.
         
@@ -45,7 +45,18 @@ class ThermalHotpointDetector:
         Returns:
             numpy.ndarray: Mask of valid (non-white) regions
         """
-        valid_mask = np.ones(image_rgb.shape[:2], dtype=np.uint8)
+        # Convert to grayscale
+        gray = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
+        
+        # Detect white regions (threshold at 240 to catch near-white pixels)
+        _, white_mask = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
+        
+        # Dilate white regions to remove them more aggressively
+        kernel = np.ones((5, 5), np.uint8)
+        white_mask_dilated = cv2.dilate(white_mask, kernel, iterations=2)
+        
+        # Invert to get valid region mask (non-white areas)
+        valid_mask = cv2.bitwise_not(white_mask_dilated)
         
         return valid_mask.astype(bool)
     

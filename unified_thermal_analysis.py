@@ -6,16 +6,7 @@ Combines two analysis methods to produce a single annotated image:
 1. ML-based Anomaly Detection (AutoEncoder)
 2. Thermal Hotpoint Detection (Region-based)
 
-Usage:
-    python unified_thermal_analysis.py <image_path> [options]
 
-Example:
-    python unified_thermal_analysis.py Dataset/T1/faulty/T1_faulty_001.jpg \\
-        --threshold 0.5 --min-area 200 --max-area 5000 \\
-        --max-annotations 3 --blue-threshold 30
-
-Author: GitHub Copilot
-Date: October 3, 2025
 """
 
 import sys
