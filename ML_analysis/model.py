@@ -61,7 +61,7 @@ class AnomalyAutoEncoder(nn.Module):
             
             # 128x128 -> 256x256
             nn.ConvTranspose2d(32, in_channels, kernel_size=3, stride=2, padding=1, output_padding=1),
-            nn.Sigmoid()  # Output in range [0, 1]
+            nn.Sigmoid()  
         )
     
     def forward(self, x):
@@ -171,4 +171,5 @@ class ImprovedAutoEncoder(nn.Module):
             reconstructed = self.forward(x)
             anomaly_map = torch.abs(x - reconstructed)
             anomaly_map = torch.mean(anomaly_map, dim=1, keepdim=True)
+            anomaly_map = (anomaly_map - anomaly_map.min()) / (anomaly_map.max() - anomaly_map.min() + 1e-8)
         return anomaly_map, reconstructed
