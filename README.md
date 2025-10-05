@@ -135,6 +135,8 @@ python unified_thermal_analysis.py Dataset/T1/faulty/T1_faulty_001.jpg \
 - Builds bounding boxes around clusters and filters out border/white noise
 - Draws yellow bounding boxes for hotspots
 
+![Arbit Thermal Analysis]()
+
 ### Unified output
 - Combines both sets of detections
 - Produces a 6-panel visualization and a single annotated image
