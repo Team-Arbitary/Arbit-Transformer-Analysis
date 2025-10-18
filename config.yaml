@@ -39,7 +39,7 @@ model:
 # API settings
 api:
   host: "0.0.0.0"
-  port: 8000
+  port: 8082
   workers: 1                      # Number of worker processes
   reload: false                   # Auto-reload on code changes (dev only)
   

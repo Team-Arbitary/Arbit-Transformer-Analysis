@@ -9,3 +9,8 @@
 /quality_assessment
 /test_results
 /quick_test
+/logs
+
+*.pyc
+__pycache__/
+*.pyo
