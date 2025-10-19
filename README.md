@@ -1,3 +1,4 @@
+
 # Unified Thermal Transformer Analysis
 
 A single tool that combines ML-based anomaly detection and thermal hotpoint detection into one annotated image output.
@@ -141,6 +142,41 @@ python unified_thermal_analysis.py Dataset/T1/faulty/T1_faulty_001.jpg \
 - Combines both sets of detections
 - Produces a 6-panel visualization and a single annotated image
 - Saves a text report with detection details
+
+## Fine-Tuning the Model
+
+Fine-tuning allows you to periodically update the anomaly detection model with new user feedback and recent images, improving accuracy and adapting to new data distributions.
+
+### How Fine-Tuning Works
+- All images from the latest data folder (by month/year) are included.
+- A configurable multiple (default: 5x) of randomly sampled images from older folders (including the base dataset) are added.
+- The combined dataset is split into training and validation sets (default: 80% train, 20% validation).
+- The best model is saved based on validation loss, not just training loss.
+- All training and validation losses, dataset breakdown, and run details are logged for traceability.
+
+### Example Fine-Tuning Command
+```powershell
+python ML_analysis/finetune.py --feedback-data Local_Dataset --weights ML_analysis/models/best_model.pth --output-dir output --old-multiplier 5 --val-split 0.2
+```
+
+**Options:**
+- `--feedback-data`: Path to the folder containing all monthly and base datasets
+- `--weights`: Path to the latest model weights (.pth)
+- `--output-dir`: Where to save outputs and logs
+- `--old-multiplier`: How many times more old images to sample compared to latest (default: 5)
+- `--val-split`: Fraction of data for validation (default: 0.2)
+- `--latest-folder`: Optionally specify the latest folder (e.g., 07_2025)
+
+### Output
+- Best fine-tuned model (`best_finetuned_model.pth`) saved by validation loss
+- Training and validation loss plot (`finetune_training_loss.png`)
+- Full run log (`finetune_log.json`) with dataset breakdown and losses
+
+### When to Fine-Tune
+- After collecting new user feedback or new images from the field
+- To keep the model up-to-date and robust to new types of anomalies
+
+See `ML_analysis/finetune.py` for full details and options.
 
 ## Tips
 
