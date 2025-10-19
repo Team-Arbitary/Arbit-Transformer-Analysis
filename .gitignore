@@ -12,3 +12,4 @@
 /models
 /Local_Dataset
 /output
+*.pyc
