@@ -3,7 +3,7 @@ matplotlib.use('Agg')
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from pathlib import Path
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -11,7 +11,6 @@ import numpy as np
 import argparse
 import json
 
-from dataset import ThermalDataset
 from finetune_dataset import FineTuneThermalDataset
 from model import AnomalyAutoEncoder
 
@@ -36,62 +35,53 @@ def finetune_autoencoder(
     learning_rate=1e-4,
     img_size=256,
     device=None,
-    val_data_root=None,
-    latest_folder=None
+    latest_folder=None,
+    old_multiplier=5,
+    val_split=0.2
 ):
-    """
-    Fine-tune AutoEncoder on new/feedback images, starting from latest weights.
-    Logs old vs new performance and training details to output_dir.
-    """
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'CUDA available: {torch.cuda.is_available()}')
     print(f"Using device: {device}")
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load fine-tune dataset (latest + sampled old)
-    print("Loading fine-tune dataset (latest + sampled old)...")
-    train_dataset = FineTuneThermalDataset(
+    # Load and split dataset
+    dataset = FineTuneThermalDataset(
         root_dir=feedback_data_root,
         img_size=img_size,
-        latest_folder=latest_folder
+        latest_folder=latest_folder,
+        old_multiplier=old_multiplier
     )
-    if len(train_dataset) == 0:
+    if len(dataset) == 0:
         raise ValueError("No images found for fine-tuning! Check your dataset path.")
+    indices = np.arange(len(dataset))
+    np.random.shuffle(indices)
+    split = int(len(indices) * (1 - val_split))
+    train_idx, val_idx = indices[:split], indices[split:]
+    train_subset = Subset(dataset, train_idx)
+    val_subset = Subset(dataset, val_idx)
     train_loader = DataLoader(
-        train_dataset,
+        train_subset,
         batch_size=batch_size,
         shuffle=True,
         num_workers=4,
         pin_memory=True if device.type == 'cuda' else False
     )
+    val_loader = DataLoader(
+        val_subset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0,  # Windows fix
+        pin_memory=True if device.type == 'cuda' else False
+    )
 
     # Gather dataset stats for logging
-    # These attributes are set in FineTuneThermalDataset
-    latest_count = getattr(train_dataset, 'latest_count', None)
-    old_count = getattr(train_dataset, 'old_count', None)
-    total_count = len(train_dataset)
-    latest_folder_name = getattr(train_dataset, 'latest_folder_name', None)
-    folder_image_counts = getattr(train_dataset, 'folder_image_counts', None)
-
-    # Optionally load validation set
-    val_loader = None
-    if val_data_root:
-        val_dataset = ThermalDataset(
-            root_dir=val_data_root,
-            mode='val',
-            img_size=img_size
-        )
-        if len(val_dataset) > 0:
-            val_loader = DataLoader(
-                val_dataset,
-                batch_size=batch_size,
-                shuffle=False,
-                num_workers=2,
-                pin_memory=True if device.type == 'cuda' else False
-            )
+    latest_count = getattr(dataset, 'latest_count', None)
+    old_count = getattr(dataset, 'old_count', None)
+    total_count = len(dataset)
+    latest_folder_name = getattr(dataset, 'latest_folder_name', None)
+    folder_image_counts = getattr(dataset, 'folder_image_counts', None)
 
     # Initialize model and load weights
     print(f"Loading model weights from {weights_path} ...")
@@ -109,14 +99,12 @@ def finetune_autoencoder(
     # Evaluate before fine-tuning
     print("Evaluating before fine-tuning...")
     old_train_loss = evaluate(model, train_loader, criterion, device)
-    old_val_loss = None
-    if val_loader:
-        old_val_loss = evaluate(model, val_loader, criterion, device)
+    old_val_loss = evaluate(model, val_loader, criterion, device)
 
     # Fine-tuning loop
-    print(f"\nStarting fine-tuning for {epochs} epochs...")
     train_losses = []
-    best_loss = float('inf')
+    val_losses = []
+    best_val_loss = float('inf')
     for epoch in range(epochs):
         model.train()
         epoch_loss = 0
@@ -132,44 +120,47 @@ def finetune_autoencoder(
             pbar.set_postfix({'loss': loss.item()})
         avg_loss = epoch_loss / len(train_loader)
         train_losses.append(avg_loss)
-        print(f'Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.6f}')
-        scheduler.step(avg_loss)
-        # Save best model
-        if avg_loss < best_loss:
-            best_loss = avg_loss
+        # Validation loss
+        model.eval()
+        val_loss = evaluate(model, val_loader, criterion, device)
+        val_losses.append(val_loss)
+        print(f'Epoch {epoch+1}/{epochs}, Train Loss: {avg_loss:.6f}, Val Loss: {val_loss:.6f}')
+        scheduler.step(val_loss)
+        # Save best model based on val loss
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': best_loss,
+                'loss': best_val_loss,
             }, output_dir / 'best_finetuned_model.pth')
-            print(f'  -> Saved best finetuned model with loss: {best_loss:.6f}')
+            print(f'  -> Saved best finetuned model with val loss: {best_val_loss:.6f}')
         # Save checkpoint every 5 epochs
         if (epoch + 1) % 5 == 0:
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': avg_loss,
+                'loss': val_loss,
             }, output_dir / f'finetune_checkpoint_epoch_{epoch+1}.pth')
     # Save final model
     torch.save({
         'epoch': epochs,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
-        'loss': avg_loss,
+        'loss': val_loss,
     }, output_dir / 'final_finetuned_model.pth')
 
     # Evaluate after fine-tuning
     print("Evaluating after fine-tuning...")
     new_train_loss = evaluate(model, train_loader, criterion, device)
-    new_val_loss = None
-    if val_loader:
-        new_val_loss = evaluate(model, val_loader, criterion, device)
+    new_val_loss = evaluate(model, val_loader, criterion, device)
 
-    # Plot training loss
+    # Plot training/validation loss
     plt.figure(figsize=(10, 5))
-    plt.plot(train_losses, label='Fine-tune Training Loss')
+    plt.plot(train_losses, label='Training Loss')
+    plt.plot(val_losses, label='Validation Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Fine-tuning Loss over Epochs')
@@ -191,15 +182,18 @@ def finetune_autoencoder(
         'old_val_loss': old_val_loss,
         'new_val_loss': new_val_loss,
         'train_losses': train_losses,
+        'val_losses': val_losses,
         'latest_folder': latest_folder_name,
         'latest_count': latest_count,
         'old_count': old_count,
         'total_count': total_count,
         'folder_image_counts': folder_image_counts,
+        'val_split': val_split,
+        'old_multiplier': old_multiplier,
     }
     with open(output_dir / 'finetune_log.json', 'w') as f:
         json.dump(log, f, indent=2)
-    print(f"\nFine-tuning completed! Best loss: {best_loss:.6f}")
+    print(f"\nFine-tuning completed! Best val loss: {best_val_loss:.6f}")
     print(f"Logs and models saved in: {output_dir}")
     print(f"\nDataset breakdown:")
     print(f"  Latest folder: {latest_folder_name} | Images: {latest_count}")
@@ -217,11 +211,12 @@ if __name__ == '__main__':
     parser.add_argument('--weights', type=str, default='ML_analysis/models/best_model.pth')
     parser.add_argument('--output-dir', default='output')
     parser.add_argument('--batch-size', type=int, default=8)
-    parser.add_argument('--epochs', type=int, default=1)
+    parser.add_argument('--epochs', type=int, default=2)
     parser.add_argument('--learning-rate', type=float, default=1e-4)
     parser.add_argument('--img-size', type=int, default=256)
-    parser.add_argument('--val-data', type=str, default=None, help='Optional path to validation set')
     parser.add_argument('--latest-folder', type=str, default=None, help='Optionally specify latest folder (e.g. 07_2025)')
+    parser.add_argument('--old-multiplier', type=int, default=5, help='Multiplier for old data sampling (default 5)')
+    parser.add_argument('--val-split', type=float, default=0.2, help='Fraction of data for validation (default 0.2)')
     args = parser.parse_args()
     finetune_autoencoder(
         feedback_data_root=args.feedback_data,
@@ -231,6 +226,7 @@ if __name__ == '__main__':
         epochs=args.epochs,
         learning_rate=args.learning_rate,
         img_size=args.img_size,
-        val_data_root=args.val_data,
-        latest_folder=args.latest_folder
+        latest_folder=args.latest_folder,
+        old_multiplier=args.old_multiplier,
+        val_split=args.val_split
     )
