@@ -10,6 +10,6 @@
 /test_results
 /quick_test
 /models
-/Local_Dataset
+/Finetune_data
 /output
 *.pyc
