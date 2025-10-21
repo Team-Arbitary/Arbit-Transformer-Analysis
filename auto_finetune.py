@@ -53,9 +53,7 @@ def main(temp_data_dir, local_dataset_dir, min_images, finetune_script, finetune
         'finetune_folder': str(target_normal.parent),
         'finetune_images_normal': img_count_normal,
         'finetune_images_faulty': img_count_faulty,
-        'finetune_log': str(Path(finetune_args[finetune_args.index('--output-dir')+1]) / 'finetune_log.json') if '--output-dir' in finetune_args else None,
-        'finetune_stdout': result.stdout,
-        'finetune_stderr': result.stderr
+        'finetune_log': str(Path(finetune_args[finetune_args.index('--output-dir')+1]) / 'finetune_log.json') if '--output-dir' in finetune_args else None
     }
     with open(status_json, 'w') as f:
         json.dump(status, f, indent=2)
