@@ -60,27 +60,18 @@ app = FastAPI(
 # Endpoint 1: Run auto_finetune.py when update command is received
 @app.post("/run-finetune")
 async def run_finetune(
-    temp_data: str = 'Finetune_data/temp_data',
-    local_dataset: str = 'Finetune_data/Local_Dataset',
-    min_images: int = 9,
-    finetune_script: str = 'ML_analysis/finetune.py',
-    finetune_args: list = ['--feedback-data', 'Finetune_data/Local_Dataset', '--weights', 'ML_analysis/models/best_model.pth', '--output-dir', 'Finetune_data/output'],
-    status_json: str = 'Finetune_data/finetune_status.json'
+    temp_data: str = Form('Finetune_data/temp_data'),
+    local_dataset: str = Form('Finetune_data/Local_Dataset'),
+    min_images: int = Form(9),
+    finetune_script: str = Form('ML_analysis/finetune.py'),
+    finetune_args: str = Form('--feedback-data,Finetune_data/Local_Dataset,--weights,ML_analysis/models/best_model.pth,--output-dir,Finetune_data/output'),
+    status_json: str = Form('Finetune_data/finetune_status.json')
 ):
     """
     Runs auto_finetune.py script and returns output.
     """
     try:
-        cmd = [
-            'python', 'Arbit-Transformer-Analysis/auto_finetune.py',
-            '--temp-data', temp_data,
-            '--local-dataset', local_dataset,
-            '--min-images', str(min_images),
-            '--finetune-script', finetune_script,
-            '--finetune-args'
-        ] + finetune_args + [
-            '--status-json', status_json
-        ]
+        cmd = ['conda', 'run', '-n', 'SW', 'python', 'auto_finetune.py']
         result = subprocess.run(cmd, capture_output=True, text=True)
         return {
             'stdout': result.stdout,
