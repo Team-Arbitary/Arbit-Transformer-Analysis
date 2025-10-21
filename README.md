@@ -1,29 +1,3 @@
-## 🛠 Automated Fine-Tuning Workflow
-
-The `auto_finetune.py` script automates the process of updating your anomaly detection model with new data and user feedback.
-
-### How It Works
-1. Checks if there are enough new images in `Finetune_data/temp_data/normal` (default: 10). If not, the script exits.
-2. If enough images are present, moves both `normal` and `faulty` images from `Finetune_data/temp_data/` to a new folder in `Finetune_data/Local_Dataset/YYYY_MM/` (organized by year and month).
-3. Clears the temporary folders after moving.
-4. Runs the fine-tuning script (`ML_analysis/finetune.py`) with the updated dataset.
-5. Logs the last fine-tune date, image counts, and run details to `Finetune_data/finetune_status.json`.
-
-### Example Usage
-```powershell
-python auto_finetune.py
-```
-You can customize options such as minimum image count, dataset paths, and fine-tune arguments:
-```powershell
-python auto_finetune.py --min-images 20 --finetune-args --feedback-data Finetune_data/Local_Dataset --weights ML_analysis/models/best_model.pth --output-dir Finetune_data/output
-```
-
-### Output
-- New images are organized in `Local_Dataset/YYYY_MM/normal` and `Local_Dataset/YYYY_MM/faulty`.
-- Fine-tuning is triggered automatically if enough new data is available.
-- Status and summary are saved in `Finetune_data/finetune_status.json`.
-
-See `auto_finetune.py` for full details and options.
 
 # Unified Thermal Transformer Analysis
 
@@ -198,11 +172,32 @@ python ML_analysis/finetune.py --feedback-data Local_Dataset --weights ML_analys
 - Training and validation loss plot (`finetune_training_loss.png`)
 - Full run log (`finetune_log.json`) with dataset breakdown and losses
 
-### When to Fine-Tune
-- After collecting new user feedback or new images from the field
-- To keep the model up-to-date and robust to new types of anomalies
+##  Automated Fine-Tuning Workflow
 
-See `ML_analysis/finetune.py` for full details and options.
+The `auto_finetune.py` script automates the process of updating your anomaly detection model with new data and user feedback.
+
+### How It Works
+1. Checks if there are enough new images in `Finetune_data/temp_data/normal` (default: 10). If not, the script exits.
+2. If enough images are present, moves both `normal` and `faulty` images from `Finetune_data/temp_data/` to a new folder in `Finetune_data/Local_Dataset/YYYY_MM/` (organized by year and month).
+3. Clears the temporary folders after moving.
+4. Runs the fine-tuning script (`ML_analysis/finetune.py`) with the updated dataset.
+5. Logs the last fine-tune date, image counts, and run details to `Finetune_data/finetune_status.json`.
+
+### Example Usage
+```powershell
+python auto_finetune.py
+```
+You can customize options such as minimum image count, dataset paths, and fine-tune arguments:
+```powershell
+python auto_finetune.py --min-images 20 --finetune-args --feedback-data Finetune_data/Local_Dataset --weights ML_analysis/models/best_model.pth --output-dir Finetune_data/output
+```
+
+### Output
+- New images are organized in `Local_Dataset/YYYY_MM/normal` and `Local_Dataset/YYYY_MM/faulty`.
+- Fine-tuning is triggered automatically if enough new data is available.
+- Status and summary are saved in `Finetune_data/finetune_status.json`.
+
+See `auto_finetune.py` for full details and options.
 
 ## Tips
 
