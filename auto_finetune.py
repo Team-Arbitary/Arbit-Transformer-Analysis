@@ -63,7 +63,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Automate finetuning workflow.')
     parser.add_argument('--temp-data', type=str, default='Finetune_data/temp_data', help='Path to temp_data folder')
     parser.add_argument('--local-dataset', type=str, default='Finetune_data/Local_Dataset', help='Path to Local_Dataset folder')
-    parser.add_argument('--min-images', type=int, default=9, help='Minimum images required to trigger finetuning')
+    parser.add_argument('--min-images', type=int, default=5, help='Minimum images required to trigger finetuning')
     parser.add_argument('--finetune-script', type=str, default='ML_analysis/finetune.py', help='Path to finetune script')
     parser.add_argument('--finetune-args', nargs='+', default=['--feedback-data', 'Finetune_data/Local_Dataset', '--weights', 'ML_analysis/models/best_model.pth', '--output-dir', 'Finetune_data/output'], help='Arguments for finetune script')
     parser.add_argument('--status-json', type=str, default='Finetune_data/finetune_status.json', help='Path to status JSON file')

@@ -13,3 +13,4 @@
 /Finetune_data
 /output
 *.pyc
+*.pth

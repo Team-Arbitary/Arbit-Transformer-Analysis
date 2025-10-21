@@ -773,7 +773,7 @@ if __name__ == "__main__":
     import uvicorn
     
     # Get port from environment variable (Render sets this) or default to 8000
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 8080))
     
     logger.info(f"Starting Thermal Anomaly Detection API server on port {port}...")
     uvicorn.run(
