@@ -33,12 +33,11 @@ def main(temp_data_dir, local_dataset_dir, min_images, finetune_script, finetune
     # Step 2: Move images to Local_Dataset/YYYY_MM/normal and faulty
     now = datetime.datetime.now()
     folder_name = f"{now.month:02d}_{now.year}"
-    target_normal = Path(local_dataset_dir) / folder_name / 'normal'
-    target_faulty = Path(local_dataset_dir) / folder_name / 'faulty'
+    target_folder = Path(local_dataset_dir) / folder_name
+    target_normal = target_folder / 'normal'
+    target_faulty = target_folder / 'faulty'
     move_images(temp_normal, target_normal)
     move_images(temp_faulty, target_faulty)
-    clear_folder(temp_normal)
-    clear_folder(temp_faulty)
     print(f"Moved {img_count_normal} normal images to {target_normal}")
     print(f"Moved {img_count_faulty} faulty images to {target_faulty}")
     # Step 3: Run finetune script
@@ -47,7 +46,21 @@ def main(temp_data_dir, local_dataset_dir, min_images, finetune_script, finetune
     result = subprocess.run(cmd, capture_output=True, text=True)
     print(result.stdout)
     print(result.stderr)
-    # Step 4: Write status JSON
+    # Step 4: Handle cleanup based on finetune result
+    if result.returncode == 0:
+        # Finetune succeeded, clear temp data
+        clear_folder(temp_normal)
+        clear_folder(temp_faulty)
+        print("Finetuning successful. Temp data cleared.")
+    else:
+        # Finetune failed, delete new Local_Dataset folder
+        print("Finetuning failed or did not happen. Deleting new Local_Dataset folder.")
+        try:
+            shutil.rmtree(target_folder)
+            print(f"Deleted folder: {target_folder}")
+        except Exception as e:
+            print(f"Failed to delete folder {target_folder}: {e}")
+    # Step 5: Write status JSON
     status = {
         'last_finetune': now.strftime('%Y-%m-%d %H:%M:%S'),
         'finetune_folder': str(target_normal.parent),
@@ -63,7 +76,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Automate finetuning workflow.')
     parser.add_argument('--temp-data', type=str, default='Finetune_data/temp_data', help='Path to temp_data folder')
     parser.add_argument('--local-dataset', type=str, default='Finetune_data/Local_Dataset', help='Path to Local_Dataset folder')
-    parser.add_argument('--min-images', type=int, default=5, help='Minimum images required to trigger finetuning')
+    parser.add_argument('--min-images', type=int, default=6, help='Minimum images required to trigger finetuning')
     parser.add_argument('--finetune-script', type=str, default='ML_analysis/finetune.py', help='Path to finetune script')
     parser.add_argument('--finetune-args', nargs='+', default=['--feedback-data', 'Finetune_data/Local_Dataset', '--weights', 'ML_analysis/models/best_model.pth', '--output-dir', 'Finetune_data/output'], help='Arguments for finetune script')
     parser.add_argument('--status-json', type=str, default='Finetune_data/finetune_status.json', help='Path to status JSON file')
