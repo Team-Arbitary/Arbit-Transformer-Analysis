@@ -199,6 +199,44 @@ python auto_finetune.py --min-images 20 --finetune-args --feedback-data Finetune
 
 See `auto_finetune.py` for full details and options.
 
+## API Endpoints for Fine-Tuning
+
+You can trigger fine-tuning and check its status using the following FastAPI endpoints:
+
+### 1. Run Fine-Tune
+
+**Endpoint:** `POST /run-finetune`
+
+**Description:**
+Runs the automated fine-tuning workflow (`auto_finetune.py`) in the active conda environment. No arguments are required; the script uses its default settings.
+
+**Example (using curl):**
+```bash
+curl -X POST http://localhost:8080/run-finetune
+```
+**Response:**
+Returns the stdout, stderr, and return code from the fine-tuning script.
+
+### 2. Fine-Tune Status
+
+**Endpoint:** `GET /finetune-status`
+
+**Description:**
+Returns the last fine-tune date and summary from `Finetune_data/finetune_status.json`.
+
+**Example (using curl):**
+```bash
+curl http://localhost:8080/finetune-status
+```
+**Response:**
+```json
+{
+    "last_finetune": "2025-10-22 01:23:45"
+}
+```
+
+---
+
 ## Tips
 
 - To get more ML detections, lower `--threshold` (for example, 0.3).
@@ -247,5 +285,6 @@ Main command example:
     --threshold 0.5 --min-area 200 --max-area 5000 \
     --max-annotations 3 --blue-threshold 30
 ```
+
 
 Main output: `unified_results/*_combined_annotated.jpg`
